@@ -1,4 +1,4 @@
-use zkhack_bls_pedersen::bls::{verify, Fr};
+use zkhack_bls_pedersen::bls::{verify};
 use zkhack_bls_pedersen::data::puzzle_data;
 use zkhack_bls_pedersen::PUZZLE_DESCRIPTION;
 use prompt::{puzzle, welcome};
@@ -12,12 +12,14 @@ use ark_serialize::CanonicalSerialize;
 use ark_ff::PrimeField;
 
 fn main() {
-    welcome();
-    puzzle(PUZZLE_DESCRIPTION);
-    let (pk, ms, sigs) = puzzle_data();
+  welcome();
+  puzzle(PUZZLE_DESCRIPTION);
 
-    // from coeffs.rs
-    let coeffs = vec![
+  // load puzzle data: public key, messages, signatures
+  let (pk, _ms, sigs) = puzzle_data();
+
+  // from coeffs.rs
+  let coeffs = vec![
       Fq::from_str("14994182791106718682612737954911896301987291962974933788113130816589816616596").unwrap(),
       Fq::from_str("9895471754295354515034129325234695347979492898799034050667429771073170271192").unwrap(),
       Fq::from_str("6142946312079221892145331641464984842058867418357363689056970718392060516863").unwrap(),
@@ -276,20 +278,22 @@ fn main() {
       Fq::from_str("21900726087699095856086401885732721303183876104574567215718131567506189572904").unwrap(),
   ];
 
-  let mut sum = G1Projective::zero();
-  for (i, num) in coeffs.iter().enumerate() {
-      let additive = sigs[i].into_projective().mul((*num).into_repr());
+  let mut sum = G1Projective::zero(); // projection curve point initialized to identity (infinity point)
+  for (i, coeff) in coeffs.iter().enumerate() {
+      // converts from affine into projective coordinates for more efficient arithmetic
+      let additive = sigs[i].into_projective().mul((*coeff).into_repr());
       sum += additive;
   }
-
+  // converts back to affine coordinates afterwards
   let affine = G1Affine::from(sum);
 
-  let msg = b"sabrinahirani".to_vec();
+  let msg = b"sabrinahirani".to_vec(); //handle
 
+  // verify signature
   verify(pk, &msg, affine.clone());
 
+  // display signature
   let mut sig = Vec::new();
   affine.serialize(&mut sig).unwrap();
-  let sig_hex = hex::encode(sig);
-  println!("sig: {}", sig_hex);
+  println!("sig: {}", hex::encode(sig));
 }
