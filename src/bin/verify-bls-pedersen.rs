@@ -4,12 +4,11 @@ use zkhack_bls_pedersen::PUZZLE_DESCRIPTION;
 use prompt::{puzzle, welcome};
 
 use ark_bls12_381::{G1Projective, G1Affine, Fq};
-use ark_ec::ProjectiveCurve;
-use ark_ec::AffineCurve;
-use ark_ff::Zero;
-use std::str::FromStr;
+use ark_ec::{AffineCurve, ProjectiveCurve};
+use ark_ff::{Zero, PrimeField};
+
 use ark_serialize::CanonicalSerialize;
-use ark_ff::PrimeField;
+use std::str::FromStr;
 
 fn main() {
   welcome();
