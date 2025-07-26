@@ -1,0 +1,39 @@
+# === Step 1: Load message bits ===
+A = []
+with open("message_bits.txt", 'r') as f:
+    for line in f:
+        row = [int(bit) for bit in line.strip()]
+        A.append(row)
+
+assert len(A) == 256
+assert all(len(row) == 256 for row in A)
+
+# === Step 2: Set up BLS12-381 scalar field ===
+P = 0x73eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001
+F = FiniteField(P)
+
+# === Step 3: Build matrix GA ===
+GA = Matrix(F, A)        # rows are messages
+GAT = GA.transpose()     # transpose so each column is a message
+
+# === Step 4: Invert matrix ===
+GAinv = GAT.inverse()
+
+# === Step 5: Load target bit vector ===
+with open("target_bits.txt", "r") as f:
+    line = f.readline().strip()
+    bits = [int(b) for b in line]
+    assert len(bits) == 256
+    gbits = vector(F, bits)
+
+# === Step 6: Multiply inverse * target ===
+gsolution = GAinv * gbits  # coefficients in F
+
+# === Step 7: Format for Rust (arkworks style) ===
+with open("coeffs.rs", "w") as f:
+    f.write("let coeffs = vec![\n")
+    for ci in gsolution:
+        f.write(f'    Fq::from_str("{int(ci)}").unwrap(),\n')
+    f.write("];\n")
+
+print("✅ Done. Wrote Rust-compatible coefficients to coeffs.rs.")

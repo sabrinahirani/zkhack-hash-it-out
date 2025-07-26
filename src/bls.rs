@@ -5,6 +5,8 @@ use std::ops::Neg;
 use crate::hash::hash_to_curve;
 use ark_ff::One;
 
+pub use ark_bls12_381::Fr;
+
 pub fn verify(pk: G2Affine, msg: &[u8], sig: G1Affine) {
     let (_, h) = hash_to_curve(msg);
     assert!(Bls12_381::product_of_pairings(&[
