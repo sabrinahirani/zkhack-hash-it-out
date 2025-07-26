@@ -1,12 +1,7 @@
-https://zkhack.dev/events/puzzle1.html
+## zkHack Challenge #1
+*Challenge: https://zkhack.dev/events/puzzle1.html*
 
-**Relevant Background:**
-* [BLS](https://hackmd.io/@benjaminion/bls12-381#BLS-digital-signatures)
-* [Pederson Hash](https://github.com/iden3/iden3-docs/blob/master/source/iden3_repos/research/publications/zkproof-standards-workshop-2/pedersen-hash/pedersen.rst)
-
-**Challenge:** https://zkhack.dev/events/puzzle1.html
-
-**Relevant Background**
+### Relevant Background
 
 **BLS Signature Scheme**
 
@@ -29,6 +24,12 @@ In this problem, the hash function is the **Pederson Hash**:
 $$
 \text{PedersenHash}(x_1, \dots, x_n) = \sum_{i=1}^{n} x_i \cdot G_i
 $$
+
+where $x_i$ are bits of the message and $G_i$ are fixed elliptic curve points.
+
+Note that the pederson hash is linear meaning:
+
+$$TODO$$
 
 ---
 
@@ -189,10 +190,14 @@ By carefully choosing $m_{\text{attacker}}$ and using the linearity of the pairi
 
 **Commands**
 
-```
-cargo run --bin extract_hash_vectors
+```rust
+cargo run --bin preprocessing
 ```
 
+```rust
+sage solve_coeffs.sage
 ```
-sage solve_coeffs.sage > selectors.rs
+
+```rust
+cargo run --bin verify-bls-pedersen
 ```

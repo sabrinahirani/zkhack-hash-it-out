@@ -16,8 +16,8 @@ fn main() {
     puzzle(PUZZLE_DESCRIPTION);
     let (pk, ms, sigs) = puzzle_data();
 
-    // from selectors.rs
-    let selectors = vec![
+    // from coeffs.rs
+    let coeffs = vec![
       Fq::from_str("14994182791106718682612737954911896301987291962974933788113130816589816616596").unwrap(),
       Fq::from_str("9895471754295354515034129325234695347979492898799034050667429771073170271192").unwrap(),
       Fq::from_str("6142946312079221892145331641464984842058867418357363689056970718392060516863").unwrap(),
@@ -277,7 +277,7 @@ fn main() {
   ];
 
   let mut sum = G1Projective::zero();
-  for (i, num) in selectors.iter().enumerate() {
+  for (i, num) in coeffs.iter().enumerate() {
       let additive = sigs[i].into_projective().mul((*num).into_repr());
       sum += additive;
   }
