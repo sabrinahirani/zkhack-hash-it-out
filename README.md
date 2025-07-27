@@ -28,9 +28,7 @@ Suppose we want to sign a message $m$.
 
 We map $m$ onto a point in $G_2$ by taking $H(m)$.  
 From this, we sign the message by calculating the signature:  
-$$
-\sigma = sk \cdot H(m) \in G_2.
-$$
+$$\sigma = sk \cdot H(m) \in G_2$$
 
 ---
 
@@ -81,9 +79,7 @@ $$
 
 The Pedersen Hash is given by the following:
 
-$$
-\text{PedersenHash}(x_1, \dots, x_n) = \sum_{i=1}^{n} x_i \cdot G_i
-$$
+$$\text{PedersenHash}(x_1, \dots, x_n) = \sum_{i=1}^{n} x_i \cdot G_i$$
 *Where:*
 - $x_i \in \{0,1\}$ are bits of the message $m$
 - $G_i$ are fixed public elliptic curve points
@@ -146,15 +142,13 @@ $$
 
 Observe that the forged signature $\sigma^*$ passes verification:
 
-$$
-\begin{aligned}
+$$\begin{aligned}
 e(\sigma^*, g_2) &= e\left(\sum_{i=1}^n \alpha_i \sigma_i, g_2\right) \\
                  &= \prod_{i=1}^n e(\sigma_i, g_2)^{\alpha_i} \\
                  &= \prod_{i=1}^n e(H(m_i), pk)^{\alpha_i} \\
                  &= e\left(\sum_{i=1}^n \alpha_i H(m_i), pk\right) \\
                  &= e(H(m^*), pk)
-\end{aligned}
-$$
+\end{aligned}$$
 
 ---
 
