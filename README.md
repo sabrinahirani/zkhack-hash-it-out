@@ -80,7 +80,10 @@ $$
 
 The Pedersen Hash is given by the following:
 
-$$\text{PedersenHash}(x_1, \dots, x_n) = \sum_{i=1}^{n} x_i \cdot G_i$$
+$$
+\text{PedersenHash}(x_1, \dots, x_n) = \sum_{i=1}^{n} x_i \cdot G_i
+$$
+
 *Where:*
 - $x_i \in \{0,1\}$ are bits of the message $m$
 - $G_i$ are fixed public elliptic curve points
