@@ -3,42 +3,31 @@
 
 ### Relevant Background
 
-**BLS Signature Scheme**
+#### BLS Signature Scheme
 
-Suppose we have groups $G_1$, $G_2$, $G_T$ such that we have a bilinear pairing function  
-$$
-e: G_1 \times G_2 \rightarrow G_T
-$$  
-and a hash function  
-$$
-H: \{0, 1\}^* \rightarrow G_2.
-$$
+**Premise**
 
-The private key is given by: $sk \in \mathbb{Z}_p$.  
-The public key is given by: $pk = sk \cdot g_2 \in G_2$.
+Suppose we have groups $G_1$, $G_2$, $G_T$ equipped with:
 
-The discrete logarithm problem ensures that we are unable to recover $sk$ from $pk$.
+- *a bilinear pairing function* $e: G_1 \times G_2 \rightarrow G_T$
+- *a uniform-random hash function* $H: \{0, 1\}^* \rightarrow G_2$
 
-In this problem, the hash function is the **Pederson Hash**:
+Now, we define a signature scheme where:
+- *the private key is given by* $sk \in \mathbb{Z}_p$
+- *the public key is given by* $pk = sk \cdot g_2 \in G_2$
 
-$$
-\text{PedersenHash}(x_1, \dots, x_n) = \sum_{i=1}^{n} x_i \cdot G_i
-$$
-
-where $x_i$ are bits of the message and $G_i$ are fixed elliptic curve points.
-
-Note that the pederson hash is linear meaning:
-
-$$TODO$$
+> **🔒 Security Assumption:**  
+> The *Discrete Logarithm (DLOG) Assumption* ensures that it is computationally infeasible to recover $sk$ from $pk$.
 
 ---
 
 **Signing**
 
 Suppose we want to sign a message $m$.  
-We map $m$ onto a point in $G_2$ by taking $H(m)$.
 
-We sign the message by calculating the signature  
+
+We map $m$ onto a point in $G_2$ by taking $H(m)$.  
+From this, we sign the message by calculating the signature:  
 $$
 \sigma = sk \cdot H(m) \in G_2.
 $$
@@ -47,148 +36,129 @@ $$
 
 **Verification**
 
-We are given a message $m$, a signature $\sigma$, and a public key $pk$.  
-We want to verify that $\sigma$ was signed with the secret key $sk$ corresponding to $pk$.
+We want to verify that $\sigma$ was signed with the secret key $sk$ corresponding to $pk$.  
+Essentially, we are posing the question: Does $\sigma = sk \cdot H(m)$ hold?
 
-Essentially, we are posing the question:  
-**Does** $\sigma = sk \cdot H(m)$ **hold**?
+But $sk$ is secret, so we check this equality *indirectly* by using the pairing:
 
-But $sk$ is secret, so we check this **indirectly** by "multiplying" both sides via a pairing, which lets us involve the public key (since $pk = sk \cdot g_2$).
+$$e(\sigma, g_2) \stackrel{?}{=} e(H(m), pk)$$
 
-This gives:
+*since we have the following by bilinearity of the pairing function:*
 
-$$
-e(\sigma, g_2) \stackrel{?}{=} e(H(m), pk)
-$$
+$$e(\sigma, g_2) = e(sk \cdot H(m), g_2) = e(H(m), g_2)^{sk} = e(H(m), sk \cdot g_2) = e(H(m), pk)$$
 
-If this equation holds, then $\sigma$ must be of the form $sk \cdot H(m)$, using the **bilinearity** of the pairing:
-
-$$
-\begin{aligned}
-e(\sigma, g_2) &= e(sk \cdot H(m), g_2) \\
-               &= e(H(m), sk \cdot g_2) \\
-               &= e(H(m), pk)
-\end{aligned}
-$$
+---
 
 **Aggregation**
 
-Suppose we have $n$ signers, each with:
+This signature scheme also supports signature aggregation:
 
-- Private key: $sk_i$
-- Public key: $pk_i = sk_i \cdot g_2 \in G_2$
-- Message: $m_i$
-- Signature: $\sigma_i = sk_i \cdot H(m_i) \in G_2$
+$$\sigma_{\text{agg}} = \sum_{i=1}^n \sigma_i$$
 
-We can aggregate the signatures as:
+> **Note:** This aggregated signature $\sigma_{\text{agg}}$ is a group element (constant-size) no matter how many signatures were combined.
 
-$$
-\sigma_{\text{agg}} = \sum_{i=1}^n \sigma_i
-$$
-
-Verification is done by checking:
+To verify the aggregated signature, we check the following:
 
 $$
 e(\sigma_{\text{agg}}, g_2) \stackrel{?}{=} \prod_{i=1}^n e(H(m_i), pk_i)
 $$
 
-This works due to the bilinearity of the pairing.
-
----
-
-**Rogue Key Attack Exploit**
-
-The security of BLS signature aggregation relies on the assumption that each public key is **independent** in the elliptic curve group.
-
-However, if an attacker crafts their public key as a **linear combination** of honest public keys, this assumption breaks down, enabling a **rogue key attack**.
-
----
-
-**How it works**
-
-Suppose honest signers have public keys $pk_1$ and $pk_2$. An attacker creates a malicious public key as:
+*since we have the following by bilinearity of the pairing function:*
 
 $$
-pk_{\text{attacker}} = pk_2 - pk_1
-$$
-
-Because $pk_{\text{attacker}}$ is a linear combination of $pk_1$ and $pk_2$, it is **linearly dependent** on the honest keys.
-
----
-
-**Forged aggregation check**
-
-The honest signatures are:
-
-$$
-\sigma_1 = sk_1 \cdot H(m_1), \quad \sigma_2 = sk_2 \cdot H(m_2)
-$$
-
-The attacker chooses $\sigma_{\text{attacker}}$ as:
-
-$$
-\sigma_{\text{attacker}} = sk_{\text{attacker}} \cdot H(m_{\text{attacker}})
-$$
-
-But without knowing $sk_{\text{attacker}}$, the attacker forges $\sigma_{\text{attacker}}$ to satisfy:
-
-$$
-\sigma_{\text{attacker}} = \sigma_2 - \sigma_1
+\begin{aligned}
+e(\sigma_{\text{agg}}, g_2) &= e\left(\sum_{i=1}^n \sigma_i, g_2\right) \\\\
+                            &= \prod_{i=1}^n e(\sigma_i, g_2) \\\\
+                            &= \prod_{i=1}^n e(sk_i \cdot H(m_i), g_2) \\\\
+                            &= \prod_{i=1}^n e(H(m_i), sk_i \cdot g_2) \\\\
+                            &= \prod_{i=1}^n e(H(m_i), pk_i)
+\end{aligned}
 $$
 
 ---
 
-Now, the aggregated signature is:
+#### Pedersen Hash
+
+The Pedersen Hash is given by the following:
 
 $$
-\sigma_{\text{agg}} = \sigma_1 + \sigma_{\text{attacker}} = \sigma_1 + (\sigma_2 - \sigma_1) = \sigma_2
+\text{PedersenHash}(x_1, \dots, x_n) = \sum_{i=1}^{n} x_i \cdot G_i
+$$
+*Where:*
+- $x_i \in \{0,1\}$ are bits of the message $m$
+- $G_i$ are fixed public elliptic curve points
+
+**Linearity**
+
+The Pedersen hash is *linear* in its inputs:
+
+$$
+\text{PedersenHash}(x + y) = \text{PedersenHash}(x) + \text{PedersenHash}(y)
 $$
 
-The aggregated public key is:
+*Because:*
 
 $$
-pk_{\text{agg}} = pk_1 + pk_{\text{attacker}} = pk_1 + (pk_2 - pk_1) = pk_2
+\begin{aligned}
+\text{PedersenHash}(x_1 + y_1, \dots, x_n + y_n) &= \sum_{i=1}^n (x_i + y_i) \cdot G_i \\
+                                                  &= \sum_{i=1}^n x_i \cdot G_i + \sum_{i=1}^n y_i \cdot G_i \\
+                                                  &= \text{PedersenHash}(x) + \text{PedersenHash}(y)
+\end{aligned}
+$$
+
+
+---
+
+### The Exploit
+
+> Since the hash function and the signature scheme are both *linear*, an attacker, who knows a set of messages and a set of corresponding signatures (all signed by the same secret key), can forge a signature on a linear combination of those messages without knowing the secret key.
+
+Suppose the attacker has messages $m_1, m_2, \dots, m_n$ (where each message is represented in bits as $m_i = (x_{i1}, x_{i2}, \dots, x_{il})$) and their corresponding signatures $\sigma_1, \sigma_2, \dots, \sigma_n$.
+
+The attacker chooses coefficients $\alpha_1, \alpha_2, \dots, \alpha_n \in \mathbb{Z}_p$ and forms a new message:
+
+$$
+m^* = \sum_{i=1}^n \alpha_i m_i = \left( \sum_{i=1}^n \alpha_i x_{i1}, \sum_{i=1}^n \alpha_i x_{i2}, \dots, \sum_{i=1}^n \alpha_i x_{il} \right)
+$$
+
+Now, the attacker can forge the signature for $m^*$ as follows:
+
+*Using the linearity of the hash function:*
+
+$$
+\begin{aligned}
+H(m^*) &= \sum_{j=1}^l \left(\sum_{i=1}^n \alpha_i x_{ij}\right) G_j \\
+       &= \sum_{i=1}^n \alpha_i \left(\sum_{j=1}^l x_{ij} G_j \right) \\
+       &= \sum_{i=1}^n \alpha_i H(m_i)
+\end{aligned}
+$$
+
+*Using the linearity of the signature scheme:*
+
+$$
+\begin{aligned}
+\sigma^* &= sk \cdot H(m^*) \\
+         &= sk \cdot \sum_{i=1}^n \alpha_i H(m_i) \\
+         &= \sum_{i=1}^n \alpha_i (sk \cdot H(m_i)) \\
+         &= \sum_{i=1}^n \alpha_i \sigma_i
+\end{aligned}
+$$
+
+Observe that the forged signature $\sigma^*$ passes verification:
+
+$$
+\begin{aligned}
+e(\sigma^*, g_2) &= e\left(\sum_{i=1}^n \alpha_i \sigma_i, g_2\right) \\
+                 &= \prod_{i=1}^n e(\sigma_i, g_2)^{\alpha_i} \\
+                 &= \prod_{i=1}^n e(H(m_i), pk)^{\alpha_i} \\
+                 &= e\left(\sum_{i=1}^n \alpha_i H(m_i), pk\right) \\
+                 &= e(H(m^*), pk)
+\end{aligned}
 $$
 
 ---
 
-**Verification check**
-
-Verification verifies:
-
-$$
-e(\sigma_{\text{agg}}, g_2) \stackrel{?}{=} \prod_i e(H(m_i), pk_i)
-$$
-
-Here,
-
-$$
-e(\sigma_{\text{agg}}, g_2) = e(\sigma_2, g_2)
-$$
-
-and
-
-$$
-\prod_i e(H(m_i), pk_i) = e(H(m_1), pk_1) \cdot e(H(m_{\text{attacker}}), pk_{\text{attacker}})
-$$
-
-Since
-
-$$
-pk_{\text{attacker}} = pk_2 - pk_1
-$$
-
-we have
-
-$$
-e(H(m_{\text{attacker}}), pk_{\text{attacker}}) = e(H(m_{\text{attacker}}), pk_2) \cdot e(H(m_{\text{attacker}}), -pk_1)
-$$
-
-By carefully choosing $m_{\text{attacker}}$ and using the linearity of the pairing, the attacker can make the product equal to $e(H(m_2), pk_2)$, making the aggregate verification pass **without knowing $sk_{\text{attacker}}$**.
-
----
-
-**Commands**
+#### Commands
 
 ```rust
 cargo run --bin preprocessing
